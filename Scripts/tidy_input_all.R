@@ -1,11 +1,10 @@
+
 library(tidyverse)
 library(readxl)
 
-
-
 # DEFINE GLOBAL VARIABLES -------------------------------------------------
 
-path_usg <- "Data/Planilha_Planificação Integrada Todos parceiros.xlsx"
+path_usg <- "Data/Planilha_Planificação Integrada Todos parceiros_20250122.xlsx"
 
 df <- read_excel(
   path = path_usg,
@@ -22,7 +21,6 @@ df_import <- df |>
     values_to = "value",
     values_transform = list(value = as.character)
   )
-
 
 # MUNGE -------------------------------------------------------------------
 
@@ -54,6 +52,35 @@ df_clean <- df_import |>
     "gavi" ~ "Gavi",
     "wb" ~ "Banco Mundial",
     .default = doador)
+  ) |>
+  mutate(psnuuid = case_match(
+    beneficiario,
+    "sps" ~ NA,
+    "dps" ~ NA,
+    "angoche" ~ "xIowtHPEVqN",
+    "c.d.nampula" ~ "jwLNNIw1MjY",
+    "erati" ~ "CotlFJ64kUi",
+    "ilha.d.moc" ~ "zvN1CKVc0o5",
+    "malema" ~ "RthlF0LdPnR",
+    "mecuburi" ~ "YLkTM4jAvvq",
+    "memba" ~ "dOIfGVyGIpn",
+    "mogovolas" ~ "EBH5pfGP97m",
+    "monapo" ~ "ztnYInN25Ev",
+    "mossuril" ~ "twsAundvOb3",
+    "muecate" ~ "TC4V2Gtm5am",
+    "murrupula" ~ "vbDb0zzpQej",
+    "nacala.porto" ~ "rzyQVCV9LjG",
+    "mongincual" ~ "rdJibBp1ZPV",
+    "lalaua" ~ "TpXEdX36fEz",
+    "moma" ~ "j5uYmqh5tq6",
+    "nacaroa" ~ "i25wGrBbMs1",
+    "rapale" ~ "dhGsWCy06oC",
+    "liupo" ~ "bEwMiJVVrEJ",
+    "nacala.velha" ~ "Un8VIqAxgEx",
+    "ribaue" ~ "DkiQIZm6OXK",
+    "larde" ~ "Bpj2lcQ3uL4",
+    "meconta" ~ "tXKwBtQqb2o",
+    .default = beneficiario)
   ) |>
 # recode beneficiario value
   mutate(beneficiario = case_match(
@@ -92,6 +119,10 @@ df_clean <- df_import |>
     "adpp" ~ "ADPP",
     "alcancar" ~ "Alcancar",
     "amasi" ~ "AMASI",
+    "forte" ~ "FORTE",
+    "amostra" ~ "Amostra",
+    "passos" ~ "Passos",
+    "fao" ~ "FAO",
     "ccs" ~ "CCS",
     "dps" ~ "DPS",
     "fdc" ~ "FDC",
@@ -106,9 +137,14 @@ df_clean <- df_import |>
     "sps" ~ "SPS",
     "tn" ~ "Transform Nutrition",
     "visao.mundial" ~ "Visão Mundial",
+    "pircom" ~ "PIRCOM",
+    "chegar" ~ "Chegar",
+    "mcaps" ~ "MCAPS",
+    "nweti" ~ "N'weti",
+    "sdsmas" ~ "SDSMAS",
+    "hdcs1" ~ "HDCS1",
     .default = mecanismo)
   ) |>
-  
   # recode values
   mutate(
     value2 = case_match(
@@ -124,6 +160,7 @@ df_clean <- df_import |>
     value2 = as.numeric(value2),
     value3 = if_else(value2 > 0, 1, 0)
   ) |> 
+  relocate(psnuuid, .after = beneficiario) |>
   
   rename(val_raw = value,
          val_count = value2,
@@ -133,28 +170,31 @@ df_clean <- df_import |>
 
 # QUALITY CONTROL ---------------------------------------------------------
 
-df2 |>
+df_clean |>
+  
   distinct(disag) |> print(n=100)
 
+df_clean |>
+  distinct(disag, beneficiario, psnuuid) |> print(n=100)
 
-df2 |>
+df_clean |>
   distinct(doador) |> print(n=100)
 
 
-df2 |>
+df_clean |>
   arrange(disag, beneficiario) |>
   distinct(disag, beneficiario) |> 
   print(n=100)
 
 
-df2 |>
+df_clean |>
   arrange(disag, mecanismo) |>
   distinct(disag, mecanismo) |> 
   print(n=100)
 
-df2 |>
-  distinct(value2) |> 
-  print(n=100)
+
+check <- df_clean |> 
+  filter(val_binary == 0)
 
 
 # WRITE TO DISK ---------------------------------------------------------------
