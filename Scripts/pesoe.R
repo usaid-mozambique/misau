@@ -9,11 +9,9 @@
 # DEPENDENCIES ------------------------------------------------------------
   
 library(tidyverse)
-library(gagglr)
 library(janitor)
 library(glue)
 library(readxl)
-library(openxlsx)
 library(tidyxl)
 
 # GLOBAL VARIABLES --------------------------------------------------------
@@ -25,8 +23,51 @@ library(tidyxl)
   
   df <- read_excel(path_pesoi, 
                    sheet = "Sheet1", 
-                   skip =8) |> 
-    clean_names()
+                   skip = 8) |> 
+    clean_names() |> 
+    slice(-(1:4))
 
 # MUNGE -------------------------------------------------------------------
+  
+  
+  df1 <- df |> 
+    mutate(row_num = row_number()) |>  # Create a row index
+    filter(!(row_num %in% unlist(map(which(no == "Sub-total"), ~ seq(.x, .x + 4))))) |> 
+    select(-c(row_num, valor)) |>  
+    fill(no, codigo, principal, indicador_produto, meta_global, responsavel_execucao, .direction = "down") |>
+    mutate(across(starts_with("cal_"), ~as.character(.))) |> 
+    pivot_longer(cols = starts_with("orcamento"), 
+                 names_to = "valor_fonte",
+                 values_to = "valor") |> 
+    filter(!is.na(valor)) |> 
+    mutate(valor_fonte = str_remove(valor_fonte, "orcamento_")) |> 
+    pivot_longer(cols = starts_with("cal_"),
+                 names_to = "periodo",
+                 values_to = "test") |> 
+    mutate(periodo = str_remove(periodo, "cal_"),
+           valor_fonte = case_when(valor_fonte == "oe" ~ "OE",
+                                   valor_fonte == "prosaude" ~ "Prosaude",
+                                   valor_fonte == "outro" ~ "Outro",
+                                   .default = valor_fonte)) |> 
+    separate_wider_delim(periodo, delim = "_", names = c("mes", "semana")) |> 
+    select(!test) |> 
+    mutate(mes = case_when(mes == "jan" ~ "jan-2025",
+                           mes == "fev" ~ "fev-2025",
+                           mes == "mar" ~ "mar-2025",
+                           mes == "abr" ~ "apr-2025",
+                           mes == "mai" ~ "may-2025",
+                           mes == "jun" ~ "jun-2025",
+                           mes == "jul" ~ "jul-2025",
+                           mes == "ago" ~ "ago-2025",
+                           mes == "set" ~ "sept-2025",
+                           mes == "out" ~ "oct-2025",
+                           mes == "nov" ~ "nov-2025",
+                           mes == "dez" ~ "dec-2025")
+           )
+  
+
+# WRITE TO DISK -----------------------------------------------------------
+
+  write_csv(df1, "Dataout/pesoi_clean.csv")  
+  
   
