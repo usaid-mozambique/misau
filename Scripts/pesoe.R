@@ -34,7 +34,7 @@ library(tidyxl)
     mutate(row_num = row_number()) |>  # Create a row index
     filter(!(row_num %in% unlist(map(which(no == "Sub-total"), ~ seq(.x, .x + 4))))) |> 
     select(-c(row_num, valor)) |>  
-    fill(no, codigo, principal, indicador_produto, meta_global, responsavel_execucao, .direction = "down") |>
+    fill(no, codigo, principal, indicador_produto, meta_global, responsavel, .direction = "down") |>
     mutate(across(starts_with("cal_"), ~as.character(.))) |> 
     pivot_longer(cols = starts_with("orcamento"), 
                  names_to = "valor_fonte",
