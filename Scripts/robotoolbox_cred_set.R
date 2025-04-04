@@ -1,21 +1,22 @@
 
 library(tidyverse)
 library(robotoolbox)
+library(glamr)
+library(dm)
 
 
-# use the below with username and password to obtain token
-kobo_token(username = "",
-           password = "",
-           url = "https://eu.kobotoolbox.org")
 
-# use the below to set token
-kobo_setup(url = "https://eu.kobotoolbox.org",
-           token = "")
+# SET CREDENTIALS ---------------------------------------------------------
 
-# use the below to verify token settings
-kobo_settings()
+acct_kobo <- "kobo-jlara"
+acct_kobo_con <- get_account(name = acct_kobo)
 
-# use the below to generate asset list
+kobo_token(username = acct_kobo_con$username,
+           password = acct_kobo_con$password,
+           url = acct_kobo_con$url)
+
+# FETCH ASSETS ------------------------------------------------------------
+
 assets <- kobo_asset_list()
 
 uid <- assets |>
@@ -25,5 +26,19 @@ uid <- assets |>
 
 asset <- kobo_asset(uid)
 
-
 df <- kobo_submissions(asset)
+
+# EXPLORE DATA ------------------------------------------------------------
+
+dm_draw(df)
+
+df_tbl <- df$main |> 
+  as_tibble()
+
+df_tbl_cron <- df$group_data |> 
+  as_tibble()
+
+df_flat <- df |>
+  dm_flatten_to_tbl(.start = group_data,
+                    .join = left_join)
+
