@@ -80,18 +80,87 @@ df_flat_1 <- df_flat |>
             `_validation_status.grupo_data`,
             `_id`,
             `uuid`,
-            subactividade_local_prov_detal,
-            actividade_principal)
+            observacao_label,
+            subactividade_meta_label,
+            starts_with("actividade_principal_objective_esp"),
+            starts_with("subactividade_local_prov_detal_"))
   ) |> 
   relocate(c(username,`_uuid`, `_submission_time`, everything())) |>
   mutate(across(where(~inherits(., "haven_labelled")), haven::as_factor)) |> 
   mutate(across(.cols = !any_of(meta), .fns = as.character)) |> 
+  separate(subactividade_local_prov_detal, into = paste0("local_", 1:12), sep = " ") |> 
+  separate(actividade_principal, into = paste0("activity_principal_", 1:21), sep = " ") |> 
   pivot_longer(cols = !c(username,
                          `_uuid`,
                          `_submission_time`,
                          subactividade_data_inicio,
                          subactividade_data_fim),
-               names_to = "variable",
-               values_to = "value")
+               names_to = "indicator",
+               values_to = "value") |> 
+  filter(!is.na(value)) |> 
+  mutate(
+    indicator = case_when(
+      
+      indicator == "responsavel_programa" ~ "Programa Responsável",
+      indicator == "responsavel_pf" ~ "Ponto Focal Responsável",
+      
+      indicator == "subactividade_descricao" ~ "Descrição da Subactividade",
+      indicator == "subactividade_tipo" ~ "Tipo de Subactividade",
+      indicator == "subactividade_beneficiario" ~ "Beneficiário da Subactividade",
+      indicator == "subactividade_local" ~ "Local da Subactividade",
+      
+      indicator == "objectivo_pess" ~ "Objetivo PESS",
+      indicator == "actividade_principal_001" ~ "Actividade Principal",
+      
+      indicator == "actividade_principal_indicador_001" ~ "Indicador de Producto da Actividade",
+      indicator == "subactividade_indicador" ~ "Indicador da Subactividade",
+      indicator == "actividade_meta" ~ "Meta da Actividade",
+      indicator == "subactividade_meta" ~ "Meta da Subactividade",
+      indicator == "meta_geografia_repeat_count" ~ "Meta Disaggreagada da Subactividade",
+      
+      indicator == "dias_central" ~ "Dias Central",
+      indicator == "dias_provincial" ~ "Dias Provincial",
+      
+      indicator == "orcamento_oe" ~ "Orçamento do Estado",
+      indicator == "orcamento_prosaude" ~ "Orçamento da ProSaude",
+      indicator == "orcamento_outro_total" ~ "Orçamento Outro Total",
+      
+      indicator == "participantes_central" ~ "Participantes Central",
+      indicator == "participantes_provincial" ~ "Participantes Provincial",
+      indicator == "participantes_distrital" ~ "Participantes Distrital",
+      
+      indicator == "observacao" ~ "Observação",
+      .default = indicator),
+    
+    indicator = str_replace(indicator, pattern = "local_.*", replacement = "Local"),
+    indicator = str_replace(indicator, pattern = "activity_principal_.*", replacement = "Objectivo Especifico Ligado ao PESS"),
+    
+    value = case_when(
+      value == "niassa" ~ "Niassa",
+      value == "cabo_delgado" ~ "Cabo Delgado",
+      value == "nampula" ~ "Nampula",
+      value == "zambezia" ~ "Zambezia",
+      value == "tete" ~ "Tete",
+      value == "manica" ~ "Manica",
+      value == "sofala" ~ "Sofala",
+      value == "inhambane" ~ "Inhambane",
+      value == "gaza" ~ "Gaza",
+      value == "maputo_provincia" ~ "Maputo Provincia",
+      value == "maputo_cidade" ~ "Cidade de Maputo",
+      
+      value == "norte" ~ "Norte",
+      value == "centro" ~ "Centro",
+      value == "sul" ~ "Sul",
+      
+      .default = value)
+  )
+  
+  
 
 
+csv <- df_flat_1 |> 
+  distinct(indicator)
+
+write_csv(csv,
+          "Documents/distinct_ind.csv",
+          na = "")
