@@ -1,0 +1,4 @@
+project:
+  type: default
+metadata-files:
+  - _brand.yml

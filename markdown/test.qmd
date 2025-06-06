@@ -1,0 +1,73 @@
+---
+title: "Direcção Nacional de Saúde Pública"
+subtitle: "Ministério da Saúde de Moçambique"
+format:
+  html:
+    markdown: basic
+execute:
+  echo: false
+  warning: false
+---
+
+# Bem-vindo
+
+Este é um exemplo de página inicial para um relatório institucional do Ministério da Saúde. A identidade visual, incluindo as cores e tipografia, segue o padrão oficial baseado no emblema nacional.
+
+## Destaques
+
+- Integração com o sistema **SISMA**
+- Visualização de dados com gráficos e tabelas
+- Relatórios automáticos com atualização contínua
+
+## Gráfico de Exemplo
+
+```{r  echo=FALSE, warning=FALSE}
+library(ggplot2)
+
+
+# Define the custom theme (if not sourcing from a file)
+misau_colors <- c(
+  "primary_red" = "#C8102E",
+  "health_green" = "#007A33",
+  "sun_yellow" = "#FFD100",
+  "sky_blue" = "#00ADEF",
+  "midnight_black" = "#1C2826",
+  "paper_white" = "#F2F2F2",
+  "corn_gold" = "#FFB81C",
+  "burnt_brown" = "#8B5E3C"
+)
+
+get_misau_color <- function(name) {
+  misau_colors[[name]]
+}
+
+theme_misau <- function(base_size = 12, base_family = "sans") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      plot.background = element_rect(fill = get_misau_color("paper_white"), color = NA),
+      panel.background = element_rect(fill = get_misau_color("paper_white"), color = NA),
+      panel.grid.major = element_line(color = "#DDDDDD"),
+      panel.grid.minor = element_blank(),
+      axis.title = element_text(color = get_misau_color("midnight_black")),
+      axis.text = element_text(color = get_misau_color("midnight_black")),
+      plot.title = element_text(face = "bold", size = rel(1.2), color = get_misau_color("health_green")),
+      plot.subtitle = element_text(size = rel(1.1), color = get_misau_color("burnt_brown")),
+      plot.caption = element_text(size = rel(0.9), color = get_misau_color("midnight_black"))
+    )
+}
+
+# Sample data
+df <- data.frame(
+  indicador = c("Vacinação", "Pré-natal", "Partos Institucionais", "Visitas Domiciliares"),
+  valor = c(85, 73, 60, 90)
+)
+
+# Plot
+ggplot(df, aes(x = reorder(indicador, valor), y = valor, fill = indicador)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = c("#007A33", "#C8102E", "#FFD100", "#00ADEF")) +
+  labs(title = "Cobertura de Serviços Essenciais",
+       x = NULL, y = "% de Cobertura") +
+  theme_misau()
+```

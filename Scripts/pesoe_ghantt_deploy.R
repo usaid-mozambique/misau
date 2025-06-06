@@ -9,6 +9,8 @@ library(glamr)
 library(dm)
 library(haven)
 library(glue)
+library(googlesheets4)
+source("Scripts/utilities.r")
 
 acct_kobo <- "kobo-jlara"
 acct_kobo_con <- get_account(name = acct_kobo)
@@ -39,12 +41,13 @@ asset_df <- kobo_submissions(asset_list)
 dm_draw(asset_df)
 
 
-# MUNGE DATA -------------------------------------------------------------------
+# GANTT PLOT -------------------------------------------------------------------
 
-df_tbl_dates <- asset_df$grupo_data
+
+df_tbl_dates <- asset_df$tbl_datas_impl
 
 df_gantt <- asset_df %>%
-  dm_flatten_to_tbl(.start = grupo_data,
+  dm_flatten_to_tbl(.start = tbl_datas_impl,
                     .join = left_join) %>% 
   select(
     responsavel_programa,
@@ -72,46 +75,6 @@ df_gantt <- asset_df %>%
       levels = unique(subactividade_descricao_short)
     )
   )
-
-
-df_orc <- asset_df$main %>% 
-  select(
-    `_index`,
-    responsavel_programa,
-    subactividade_tipo_label,
-    subactividade_descricao,
-    calc_consultor_total,
-    calc_reproducao_total_custo,
-    calc_estudo_investigador_total,
-    calc_deslocacao_total,
-    calc_contratacao_custo,
-    orcamento_oe,
-    orcamento_prosaude,
-    orcamento_outro_total,
-    calc_financiamento,
-    calc_financiamento_lacuna
-  ) %>% 
-  mutate(across(
-    !c(`_index`, 
-       responsavel_programa, 
-       subactividade_descricao, 
-       subactividade_tipo_label),
-    ~ ifelse(is.nan(.), 0, .)
-  ),
-  across(starts_with("calc_"), as.numeric),
-  responsavel_programa = str_to_upper(responsavel_programa)) %>% 
-  group_by(responsavel_programa) %>% 
-  summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE)), .groups = "drop") %>% 
-  mutate(
-    orcamento_total = rowSums(across(c(calc_consultor_total, 
-                                       calc_reproducao_total_custo,
-                                       calc_estudo_investigador_total,
-                                       calc_deslocacao_total,
-                                       calc_contratacao_custo)))
-  )
-
-
-# PLOT GHANTT ---------------------------------------------------------------
 
 
 # plot activity gantt chart
@@ -161,7 +124,44 @@ ggsave("Images/pesoe_gantt.pdf",
        units = "cm")
 
 
-# PLOT GHANTT ---------------------------------------------------------------
+# DIMENSION VIZ PLOT --------------------------------------------------
+
+
+df_orc <- asset_df$main %>% 
+  select(
+    `_index`,
+    responsavel_programa,
+    subactividade_tipo_label,
+    subactividade_descricao,
+    calc_consultor_total,
+    calc_reproducao_total_custo,
+    calc_estudo_investigador_total,
+    calc_deslocacao_total,
+    calc_contratacao_custo,
+    orcamento_oe,
+    orcamento_prosaude,
+    orcamento_outro_total,
+    calc_financiamento,
+    calc_financiamento_lacuna
+  ) %>% 
+  mutate(across(
+    !c(`_index`, 
+       responsavel_programa, 
+       subactividade_descricao, 
+       subactividade_tipo_label),
+    ~ ifelse(is.nan(.), 0, .)
+  ),
+  across(starts_with("calc_"), as.numeric),
+  responsavel_programa = str_to_upper(responsavel_programa)) %>% 
+  group_by(responsavel_programa) %>% 
+  summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE)), .groups = "drop") %>% 
+  mutate(
+    orcamento_total = rowSums(across(c(calc_consultor_total, 
+                                       calc_reproducao_total_custo,
+                                       calc_estudo_investigador_total,
+                                       calc_deslocacao_total,
+                                       calc_contratacao_custo)))
+  )
 
 
 df_viz <- asset_df$main %>% 
@@ -274,3 +274,21 @@ plot_col <- function(df, dimension, metric) {
 plot_col(df = df_viz, 
          dimension = subactividade_tipo_label, 
          metric = orcamento_outro_total)
+
+
+
+# CHECK ALIGNMENT OF AGGREGATE AND GEO-DISAGGREGATED TARGETS -----------------------------------------------------------
+
+
+c <- verificar_metas(asset_df = asset_df)
+s <- gerar_ggsheet(asset_df = asset_df)
+
+
+# WRITE TO DISK -----------------------------------------------------------
+
+
+write_csv(
+  s,
+  file = "Dataout/ggsheet.csv",
+  na = ""
+)

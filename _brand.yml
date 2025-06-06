@@ -1,0 +1,39 @@
+
+meta:
+  name: "Ministério da Saúde de Moçambique"
+  link: 
+    portal: https://sisma.misau.gov.mz/index.html
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    title-block-banner: true
+    title-block-style: default
+    title-block-logo: ..\Images\misau_logo_med.png
+    title-block-logo-align: left
+    google-fonts:
+      - Nunito Sans
+      - Montserrat
+      - Fira Code
+    font-family:
+      heading: Montserrat
+      body: Nunito Sans
+      code: Fira Code
+
+color:
+  palette:
+    primary-red: "#C8102E"
+    health-green: "#007A33"
+    sun-yellow: "#FFD100"
+    sky-blue: "#00ADEF"
+    midnight-black: "#1C2826"
+    paper-white: "#F2F2F2"
+    corn-gold: "#FFB81C"
+    burnt-brown: "#8B5E3C"
+  primary: "health-green"
+  secondary: "primary-red"
+  background: "paper-white"
+  foreground: "midnight-black"
