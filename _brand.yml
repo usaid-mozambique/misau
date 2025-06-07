@@ -10,7 +10,7 @@ format:
     toc: true
     toc-depth: 2
     number-sections: true
-    title-block-banner: true
+    title-block-banner: "#FFDDFF"
     title-block-style: default
     title-block-logo: ..\Images\misau_logo_med.png
     title-block-logo-align: left
